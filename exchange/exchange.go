@@ -6,17 +6,17 @@ import (
     "sort"
 )
 
-type Book []Order
+type book []Order
 
 type Exchange struct {
 	Symbol string
 
-	bids Book
-	asks Book
+	bids book
+	asks book
 }
 
 func (e Exchange) String() string {
-    fmtOrders := func (orders Book) string {
+    fmtOrders := func (orders book) string {
         res := make([]string, len(orders))
         for i, o := range orders {
             res[i] = o.String()
@@ -31,11 +31,11 @@ func (e Exchange) String() string {
 
 // books are sorted from most to least preferred order; that is by price
 // (low to high for asks, high to low for buys) then by ordinal
-func (b Book) Len() int {
+func (b book) Len() int {
     return len(b)
 }
 
-func (b Book) Less(i, j int) bool {
+func (b book) Less(i, j int) bool {
     oi := b[i]
     oj := b[j]
 
@@ -50,13 +50,13 @@ func (b Book) Less(i, j int) bool {
     }
 }
 
-func (b Book) Swap(i, j int) {
+func (b book) Swap(i, j int) {
     b[i], b[j] = b[j], b[i]
 }
 
 func (e *Exchange) normalize() {
     // TODO: omg slow
-    filter := func (unfiltered Book) (filtered Book) {
+    filter := func (unfiltered book) (filtered book) {
         for _, o := range(unfiltered) {
             if o.Quantity != 0 {
                 filtered = append(filtered, o)
