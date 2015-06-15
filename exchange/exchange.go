@@ -1,4 +1,4 @@
-package main
+package exchange
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 type Book []Order
 
 type Exchange struct {
-	symbol string
+	Symbol string
 
 	bids Book
 	asks Book
@@ -26,7 +26,7 @@ func (e Exchange) String() string {
     }
 
 	return fmt.Sprintf("Exchange for %s with bids: %v; asks: %v>",
-		e.symbol, fmtOrders(e.bids), fmtOrders(e.asks))
+		e.Symbol, fmtOrders(e.bids), fmtOrders(e.asks))
 }
 
 // books are sorted from most to least preferred order; that is by price
@@ -39,14 +39,14 @@ func (b Book) Less(i, j int) bool {
     oi := b[i]
     oj := b[j]
 
-    if oi.price == oj.price {
+    if oi.Price == oj.Price {
         return oi.ordinal < oj.ordinal
     }
 
-    if oi.orderType == "ASK" {
-        return oi.price < oj.price
+    if oi.OrderType == "ASK" {
+        return oi.Price < oj.Price
     } else {
-        return oi.price > oj.price
+        return oi.Price > oj.Price
     }
 }
 
@@ -58,7 +58,7 @@ func (e *Exchange) normalize() {
     // TODO: omg slow
     filter := func (unfiltered Book) (filtered Book) {
         for _, o := range(unfiltered) {
-            if o.quantity != 0 {
+            if o.Quantity != 0 {
                 filtered = append(filtered, o)
             }
         }
@@ -81,7 +81,7 @@ func (e *Exchange) handleBid(bid *Order, execs ExecutionChan) {
             execs <- exec
         }
 
-        if bid.quantity == 0 {
+        if bid.Quantity == 0 {
             return
         }
     }
@@ -98,7 +98,7 @@ func (e *Exchange) handleAsk(ask *Order, execs ExecutionChan) {
             execs <- exec
         }
 
-        if ask.quantity == 0 {
+        if ask.Quantity == 0 {
             return
         }
     }
@@ -106,13 +106,13 @@ func (e *Exchange) handleAsk(ask *Order, execs ExecutionChan) {
 	return
 }
 
-func (e *Exchange) run(orders OrderChan, execs ExecutionChan) {
+func (e *Exchange) Run(orders OrderChan, execs ExecutionChan) {
     var ordinal int64
     for order := range orders {
         order.ordinal = ordinal
         ordinal += 1
 
-        switch order.orderType {
+        switch order.OrderType {
         case "BID": e.handleBid(order, execs)
         case "ASK": e.handleAsk(order, execs)
         }

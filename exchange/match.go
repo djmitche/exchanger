@@ -1,39 +1,39 @@
-package main
+package exchange
 
 // match the given bid and order
 func match(bid, ask *Order) (ex *Execution) {
 	var price int
     var quantity int
 
-	if bid.price < ask.price {
+	if bid.Price < ask.Price {
 		return // no deal!
     }
 
     // earlier order is the market-maker, so the later order sets the price, even
     // if that puts the later order at a disadvantage
     if bid.ordinal > ask.ordinal {
-        price = bid.price
+        price = bid.Price
     } else {
-        price = ask.price
+        price = ask.Price
     }
 
     // quantity is the minimum of the two orders
-	if bid.quantity <= ask.quantity {
-        quantity = bid.quantity
+	if bid.Quantity <= ask.Quantity {
+        quantity = bid.Quantity
     } else {
-        quantity = ask.quantity
+        quantity = ask.Quantity
     }
 
     // create an execution and modify the two orders
     ex = &Execution{
-        buyer: bid.party,
-        seller: ask.party,
-        quantity: quantity,
-        price: price,
-        symbol: bid.symbol,
+        buyer: bid.Party,
+        seller: ask.Party,
+        Quantity: quantity,
+        Price: price,
+        Symbol: bid.Symbol,
     }
-    bid.quantity -= quantity
-    ask.quantity -= quantity
+    bid.Quantity -= quantity
+    ask.Quantity -= quantity
 
     return
 }

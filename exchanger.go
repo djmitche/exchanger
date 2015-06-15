@@ -3,31 +3,32 @@ package main
 import (
     "fmt"
     "time"
+    "github.com/djmitche/exchanger/exchange"
 )
 
-func execPrinter(execs ExecutionChan) {
+func execPrinter(execs exchange.ExecutionChan) {
     for exec := range execs {
         fmt.Println(exec)
     }
 }
 
 func main() {
-    exch := Exchange{symbol: "A"}
-    execs := make(ExecutionChan)
-    orders := make(OrderChan)
+    exch := exchange.Exchange{Symbol: "A"}
+    execs := make(exchange.ExecutionChan)
+    orders := make(exchange.OrderChan)
 
     go execPrinter(execs)
-    go exch.run(orders, execs)
+    go exch.Run(orders, execs)
 
-    orders <- &Order{orderType: "BID", party: "Bruce", quantity: 100, price: 92, symbol: "A"}
-    orders <- &Order{orderType: "ASK", party: "Sam", quantity: 90, price: 97, symbol: "A"}
-    orders <- &Order{orderType: "BID", party: "Bob", quantity: 100, price: 93, symbol: "A"}
-    orders <- &Order{orderType: "ASK", party: "Sarah", quantity: 20, price: 94, symbol: "A"}
-    orders <- &Order{orderType: "BID", party: "Brian", quantity: 100, price: 91, symbol: "A"}
-    orders <- &Order{orderType: "ASK", party: "Samantha", quantity: 20, price: 95, symbol: "A"}
+    orders <- &exchange.Order{OrderType: "BID", Party: "Bruce", Quantity: 100, Price: 92, Symbol: "A"}
+    orders <- &exchange.Order{OrderType: "ASK", Party: "Sam", Quantity: 90, Price: 97, Symbol: "A"}
+    orders <- &exchange.Order{OrderType: "BID", Party: "Bob", Quantity: 100, Price: 93, Symbol: "A"}
+    orders <- &exchange.Order{OrderType: "ASK", Party: "Sarah", Quantity: 20, Price: 94, Symbol: "A"}
+    orders <- &exchange.Order{OrderType: "BID", Party: "Brian", Quantity: 100, Price: 91, Symbol: "A"}
+    orders <- &exchange.Order{OrderType: "ASK", Party: "Samantha", Quantity: 20, Price: 95, Symbol: "A"}
     fmt.Println(exch)
-    orders <- &Order{orderType: "BID", party: "Bart", quantity: 100, price: 94, symbol: "A"}
-    orders <- &Order{orderType: "BID", party: "Bart", quantity: 100, price: 96, symbol: "A"}
+    orders <- &exchange.Order{OrderType: "BID", Party: "Bart", Quantity: 100, Price: 94, Symbol: "A"}
+    orders <- &exchange.Order{OrderType: "BID", Party: "Bart", Quantity: 100, Price: 96, Symbol: "A"}
 
     time.Sleep(1)
 }
