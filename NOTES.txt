@@ -1,0 +1,11 @@
+To Do:
+* Map more closely to FIX messages
+* support "subscribing" to executions from an exchange (and "executions"
+  should correspond to the data feed from an exchange, so maybe quotes too)
+* calculate market NBBO, spread, other metrics
+
+Ideas:
+* support inter-exchange connections similar to NYSE vs. BATS
+* build variable-delay order channels
+* figure out a way to create random information about a symbol and build algos
+  around it
