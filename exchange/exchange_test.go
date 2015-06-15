@@ -5,6 +5,58 @@ import (
 	"testing"
 )
 
+func assertBook(t *testing.T, got, exp book) {
+    if len(got) != len(exp) {
+        t.Fatal("unexpected number of orders in book")
+    }
+    for i, e := range exp {
+        g := got[i]
+        if g.Quantity != e.Quantity || g.Price != e.Price {
+            t.Fatal("unexpected order in book")
+        }
+    }
+}
+
+func TestBidOrdering(t *testing.T) {
+    m := market{symbol: "X"}
+    execChan := make(ExecutionChan)
+
+    m.handleOrder(&Order{OrderType: "BID", Price: 25, Quantity: 1, ordinal: 1}, execChan)
+    m.handleOrder(&Order{OrderType: "BID", Price: 26, Quantity: 1, ordinal: 2}, execChan)
+    m.handleOrder(&Order{OrderType: "BID", Price: 27, Quantity: 1, ordinal: 3}, execChan)
+    m.handleOrder(&Order{OrderType: "BID", Price: 26, Quantity: 1, ordinal: 4}, execChan)
+    m.handleOrder(&Order{OrderType: "BID", Price: 24, Quantity: 1, ordinal: 5}, execChan)
+
+    log.Println(m)
+    assertBook(t, m.bids, book{
+        Order{OrderType: "BID", Price: 27, Quantity: 1, ordinal: 3},
+        Order{OrderType: "BID", Price: 26, Quantity: 1, ordinal: 2},
+        Order{OrderType: "BID", Price: 26, Quantity: 1, ordinal: 4},
+        Order{OrderType: "BID", Price: 25, Quantity: 1, ordinal: 1},
+        Order{OrderType: "BID", Price: 24, Quantity: 1, ordinal: 5},
+    })
+}
+
+func TestAskOrdering(t *testing.T) {
+    m := market{symbol: "X"}
+    execChan := make(ExecutionChan)
+
+    m.handleOrder(&Order{OrderType: "ASK", Price: 25, Quantity: 1, ordinal: 1}, execChan)
+    m.handleOrder(&Order{OrderType: "ASK", Price: 26, Quantity: 1, ordinal: 2}, execChan)
+    m.handleOrder(&Order{OrderType: "ASK", Price: 27, Quantity: 1, ordinal: 3}, execChan)
+    m.handleOrder(&Order{OrderType: "ASK", Price: 26, Quantity: 1, ordinal: 4}, execChan)
+    m.handleOrder(&Order{OrderType: "ASK", Price: 24, Quantity: 1, ordinal: 5}, execChan)
+
+    log.Println(m)
+    assertBook(t, m.asks, book{
+        Order{OrderType: "ASK", Price: 24, Quantity: 1, ordinal: 5},
+        Order{OrderType: "ASK", Price: 25, Quantity: 1, ordinal: 1},
+        Order{OrderType: "ASK", Price: 26, Quantity: 1, ordinal: 2},
+        Order{OrderType: "ASK", Price: 26, Quantity: 1, ordinal: 4},
+        Order{OrderType: "ASK", Price: 27, Quantity: 1, ordinal: 3},
+    })
+}
+
 func tryHandle(t *testing.T, bids, asks []Order, order Order, exp_bids, exp_asks []Order, exp_execs []Execution) {
     // save some typing in the test functions and fill in constant details here
     for i := range bids {
@@ -41,25 +93,8 @@ func tryHandle(t *testing.T, bids, asks []Order, order Order, exp_bids, exp_asks
     }
 	log.Printf("after: %s", mkt)
 
-    if len(mkt.bids) != len(exp_bids) {
-        t.Fatal("unexpected number of bids in book")
-    }
-    for i, exp := range exp_bids {
-        got := mkt.bids[i]
-        if got.Quantity != exp.Quantity || got.Price != exp.Price {
-            t.Fatal("unexpected bid in book")
-        }
-    }
-
-    if len(mkt.asks) != len(exp_asks) {
-        t.Fatal("unexpected number of asks in book")
-    }
-    for i, exp := range exp_asks {
-        got := mkt.asks[i]
-        if got.Quantity != exp.Quantity || got.Price != exp.Price {
-            t.Fatal("unexpected ask in book")
-        }
-    }
+    assertBook(t, mkt.bids, exp_bids)
+    assertBook(t, mkt.asks, exp_asks)
 
     if len(execs) != len(exp_execs) {
         t.Fatal("unexpected number of executions")

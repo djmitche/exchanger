@@ -54,7 +54,7 @@ func (b book) Swap(i, j int) {
 }
 
 func (m *market) normalize() {
-    // TODO: omg slow
+    // TODO: omg slow; refactor to use a linked list of orders
     filter := func (unfiltered book) (filtered book) {
         for _, o := range(unfiltered) {
             if o.Quantity != 0 {
