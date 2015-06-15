@@ -35,3 +35,5 @@ type Execution struct {
 func (ex Execution) String() string {
     return fmt.Sprintf("<EXEC %dx%s@%d %s to %s>", ex.quantity, ex.symbol, ex.price, ex.seller, ex.buyer)
 }
+
+type ExecutionChan chan *Execution

@@ -72,13 +72,13 @@ func (e *Exchange) normalize() {
     sort.Sort(e.asks)
 }
 
-func (e *Exchange) handleBid(bid *Order) (execs []Execution) {
+func (e *Exchange) handleBid(bid *Order, execs ExecutionChan) {
     defer e.normalize()
     // match against asks, in order, until exhausted
     for i := range(e.asks) {
         exec := match(bid, &e.asks[i])
         if exec != nil {
-            execs = append(execs, *exec)
+            execs <- exec
         }
 
         if bid.quantity == 0 {
@@ -89,13 +89,13 @@ func (e *Exchange) handleBid(bid *Order) (execs []Execution) {
 	return
 }
 
-func (e *Exchange) handleAsk(ask *Order) (execs []Execution) {
+func (e *Exchange) handleAsk(ask *Order, execs ExecutionChan) {
     defer e.normalize()
     // match against bids, in order, until exhausted
     for i := range(e.bids) {
         exec := match(&e.bids[i], ask)
         if exec != nil {
-            execs = append(execs, *exec)
+            execs <- exec
         }
 
         if ask.quantity == 0 {

@@ -30,15 +30,22 @@ func tryHandle(t *testing.T, bids, asks []Order, order Order, exp_bids, exp_asks
 	log.Printf("before: %s", exch)
     log.Printf("handling %s", order)
 
-    var execs []Execution
+    execChan := make(ExecutionChan, len(exp_execs) + 10)
     switch order.orderType {
-    case "BID": execs = exch.handleBid(&order)
-    case "ASK": execs = exch.handleAsk(&order)
+    case "BID": exch.handleBid(&order, execChan)
+    case "ASK": exch.handleAsk(&order, execChan)
     default: t.Fatal("order doesn't have a type")
     }
+    // TODO: there's some way to close a channel..
+    execChan <- nil
 
-    for _, exec := range execs {
+    var execs []Execution
+    for exec := range execChan {
+        if exec == nil {
+            break
+        }
         log.Printf("executed %s", exec)
+        execs = append(execs, *exec)
     }
 	log.Printf("after: %s", exch)
 
