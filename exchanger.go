@@ -13,7 +13,7 @@ func execPrinter(execs exchange.ExecutionChan) {
 }
 
 func main() {
-    exch := exchange.Exchange{Symbol: "A"}
+    exch := exchange.Exchange{}
     execs := make(exchange.ExecutionChan)
     orders := make(exchange.OrderChan)
 
@@ -26,9 +26,10 @@ func main() {
     orders <- &exchange.Order{OrderType: "ASK", Party: "Sarah", Quantity: 20, Price: 94, Symbol: "A"}
     orders <- &exchange.Order{OrderType: "BID", Party: "Brian", Quantity: 100, Price: 91, Symbol: "A"}
     orders <- &exchange.Order{OrderType: "ASK", Party: "Samantha", Quantity: 20, Price: 95, Symbol: "A"}
-    fmt.Println(exch)
     orders <- &exchange.Order{OrderType: "BID", Party: "Bart", Quantity: 100, Price: 94, Symbol: "A"}
     orders <- &exchange.Order{OrderType: "BID", Party: "Bart", Quantity: 100, Price: 96, Symbol: "A"}
+    orders <- &exchange.Order{OrderType: "BID", Party: "Brad", Quantity: 10, Price: 96, Symbol: "B"}
 
     time.Sleep(1)
+    fmt.Println(exch)
 }

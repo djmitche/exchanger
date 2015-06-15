@@ -23,19 +23,15 @@ func tryHandle(t *testing.T, bids, asks []Order, order Order, exp_bids, exp_asks
     order.Party = "Burt"
     order.ordinal = 1000 // after any of the others
 
-    // create and normalize the exchange
-	exch := Exchange{Symbol: "A", bids: bids, asks: asks}
-    exch.normalize()
+    // create and normalize the market
+	mkt := market{symbol: "A", bids: bids, asks: asks}
+    mkt.normalize()
 
-	log.Printf("before: %s", exch)
+	log.Printf("before: %s", mkt)
     log.Printf("handling %s", order)
 
     execChan := make(ExecutionChan, len(exp_execs) + 10)
-    switch order.OrderType {
-    case "BID": exch.handleBid(&order, execChan)
-    case "ASK": exch.handleAsk(&order, execChan)
-    default: t.Fatal("order doesn't have a type")
-    }
+    mkt.handleOrder(&order, execChan)
     close(execChan)
 
     var execs []Execution
@@ -43,23 +39,23 @@ func tryHandle(t *testing.T, bids, asks []Order, order Order, exp_bids, exp_asks
         log.Printf("executed %s", exec)
         execs = append(execs, *exec)
     }
-	log.Printf("after: %s", exch)
+	log.Printf("after: %s", mkt)
 
-    if len(exch.bids) != len(exp_bids) {
+    if len(mkt.bids) != len(exp_bids) {
         t.Fatal("unexpected number of bids in book")
     }
     for i, exp := range exp_bids {
-        got := exch.bids[i]
+        got := mkt.bids[i]
         if got.Quantity != exp.Quantity || got.Price != exp.Price {
             t.Fatal("unexpected bid in book")
         }
     }
 
-    if len(exch.asks) != len(exp_asks) {
+    if len(mkt.asks) != len(exp_asks) {
         t.Fatal("unexpected number of asks in book")
     }
     for i, exp := range exp_asks {
-        got := exch.asks[i]
+        got := mkt.asks[i]
         if got.Quantity != exp.Quantity || got.Price != exp.Price {
             t.Fatal("unexpected ask in book")
         }
