@@ -105,3 +105,16 @@ func (e *Exchange) handleAsk(ask *Order, execs ExecutionChan) {
     e.asks = append(e.asks, *ask)
 	return
 }
+
+func (e *Exchange) run(orders OrderChan, execs ExecutionChan) {
+    var ordinal int64
+    for order := range orders {
+        order.ordinal = ordinal
+        ordinal += 1
+
+        switch order.orderType {
+        case "BID": e.handleBid(order, execs)
+        case "ASK": e.handleAsk(order, execs)
+        }
+    }
+}
