@@ -1,5 +1,6 @@
 To Do:
 * Map more closely to FIX messages
+  * use quickfixgo
 * support "subscribing" to executions from an exchange (and "executions"
   should correspond to the data feed from an exchange, so maybe quotes too)
 * calculate market NBBO, spread, other metrics
