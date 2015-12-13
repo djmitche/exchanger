@@ -2,7 +2,7 @@ package exchange
 
 import (
 	"fmt"
-	"log"
+	"github.com/djmitche/exchanger"
 )
 
 type market struct {
@@ -31,47 +31,51 @@ func (m *market) normalize() {
 	}
 }
 
-// matchAndExecute executes the given aggressive and resting orders if they
-// match.  This assumes the caller has verified the two are not both of the
-// same type (buy/buy or sell/sell).
-func matchAndExecute(aggressive, resting *stampedOrder) {
-	matched := false
-	price := 0
+// Match returns true and the matched price if the given aggressive and resting
+// order match.  This assumes the caller has verified the two are not both of
+// the same type (buy/buy or sell/sell).
 
+func match(aggressive, resting *stampedOrder) (bool, int) {
 	if aggressive.IsMarket() {
 		// a market order matches any resting order regardless of price
-		matched = true
-		price = resting.Price
+		return true, resting.Price
 	} else {
 		if aggressive.IsBuy() {
 			if aggressive.Price >= resting.Price {
-				matched = true
-				price = resting.Price
+				return true, resting.Price
 			}
 		} else {
 			if aggressive.Price <= resting.Price {
-				matched = true
-				price = resting.Price
+				return true, resting.Price
 			}
 		}
 	}
 
-	if !matched {
-		return
-	}
+	return false, -1
+}
 
+func execute(aggressive, resting *stampedOrder, price int, m *market, ticker exchanger.Ticker) {
 	quantity := aggressive.Quantity
 	if resting.Quantity < quantity {
 		quantity = resting.Quantity
 	}
 
+	if quantity == 0 {
+		return
+	}
+
 	// actually execute the order by decrementing quantity
-	log.Printf("execute at %d", price)
+	ticker.Tick(&exchanger.Tick{
+		Type:     exchanger.ExecutionTick,
+		Price:    price,
+		Quantity: quantity,
+		Symbol:   m.symbol,
+	})
 	aggressive.Quantity -= quantity
 	resting.Quantity -= quantity
 }
 
-func (m *market) handleOrder(order *stampedOrder) {
+func (m *market) handleOrder(order *stampedOrder, ticker exchanger.Ticker) {
 	var i int
 	bookSize := m.book.Len()
 
@@ -87,7 +91,9 @@ func (m *market) handleOrder(order *stampedOrder) {
 		// book
 		for i < bookSize && order.Quantity >= 0 {
 			resting := m.book.orders[i]
-			matchAndExecute(order, resting)
+			if matched, price := match(order, resting); matched {
+				execute(order, resting, price, m, ticker)
+			}
 			if resting.Quantity != 0 {
 				break
 			}
@@ -99,7 +105,9 @@ func (m *market) handleOrder(order *stampedOrder) {
 		i--
 		for i >= 0 && order.Quantity >= 0 {
 			resting := m.book.orders[i]
-			matchAndExecute(order, resting)
+			if matched, price := match(order, resting); matched {
+				execute(order, resting, price, m, ticker)
+			}
 			if resting.Quantity != 0 {
 				break
 			}
@@ -108,7 +116,13 @@ func (m *market) handleOrder(order *stampedOrder) {
 	}
 
 	// if this isn't a market order and it isn't filled, add it to the book
-	if !order.IsMarket() {
+	if !order.IsMarket() && order.Quantity != 0 {
+		ticker.Tick(&exchanger.Tick{
+			Type:     exchanger.QuoteTick,
+			Price:    order.Price,
+			Quantity: order.Quantity,
+			Symbol:   order.Symbol,
+		})
 		m.book.Add(order)
 	}
 

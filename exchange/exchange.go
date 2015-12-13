@@ -12,6 +12,7 @@ type Exchange struct {
 	markets map[string]*market // TODO: use an interface here to allow DI for testing
 	log     *log.Logger
 	ordinal uint64
+	ticker  exchanger.Ticker
 }
 
 func New(symbols []string) *Exchange {
@@ -44,5 +45,5 @@ func (e *Exchange) Process(o *exchanger.Order) {
 		e.log.Printf("Order for nonexistent symbol %s", order.Symbol)
 		return
 	}
-	mkt.handleOrder(order)
+	mkt.handleOrder(order, e.ticker)
 }

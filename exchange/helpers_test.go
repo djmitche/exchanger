@@ -57,6 +57,28 @@ func makeBook(orders ...*stampedOrder) book {
 	return book{orders: orders}
 }
 
+func quoteTick(price int, quantity int) exchanger.Tick {
+	return exchanger.Tick{
+		Type:     exchanger.QuoteTick,
+		Price:    price,
+		Quantity: quantity,
+		Symbol:   "AAPL",
+	}
+}
+
+func execTick(price int, quantity int) exchanger.Tick {
+	return exchanger.Tick{
+		Type:     exchanger.ExecutionTick,
+		Price:    price,
+		Quantity: quantity,
+		Symbol:   "AAPL",
+	}
+}
+
+func makeTicks(ticks ...exchanger.Tick) []exchanger.Tick {
+	return ticks
+}
+
 func assertEqualBooks(t *testing.T, a book, b book, description string) {
 	aString := a.String()
 	bString := b.String()

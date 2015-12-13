@@ -1,8 +1,36 @@
 package exchange
 
 import (
+	"github.com/djmitche/exchanger"
 	"testing"
 )
+
+type recordingTicker struct {
+	ticks []exchanger.Tick
+	t     *testing.T
+}
+
+func (tkr *recordingTicker) Tick(tick *exchanger.Tick) {
+	tkr.t.Log(tick)
+	tkr.ticks = append(tkr.ticks, *tick)
+}
+
+func (tkr *recordingTicker) assertTicks(ticks []exchanger.Tick) {
+	different := false
+	if len(tkr.ticks) != len(ticks) {
+		different = true
+	} else {
+		for i := range tkr.ticks {
+			if tkr.ticks[i] != ticks[i] {
+				different = true
+			}
+		}
+	}
+
+	if different {
+		tkr.t.Errorf("expected ticks %#v; got ticks %#v", ticks, tkr.ticks)
+	}
+}
 
 func TestHandleOrder(t *testing.T) {
 	tests := []struct {
@@ -10,6 +38,7 @@ func TestHandleOrder(t *testing.T) {
 		before      book
 		order       *stampedOrder
 		after       book
+		ticks       []exchanger.Tick
 	}{
 		{
 			"unfulfilled market buy makes no change",
@@ -20,6 +49,7 @@ func TestHandleOrder(t *testing.T) {
 			makeBook(
 				limBuy(10, 100, 1),
 			),
+			makeTicks(),
 		},
 		{
 			"completely matched market buy removes resting order",
@@ -30,6 +60,9 @@ func TestHandleOrder(t *testing.T) {
 			mktBuy(-1, 100, 4),
 			makeBook(
 				limSell(11, 100, 2),
+			),
+			makeTicks(
+				execTick(10, 100),
 			),
 		},
 		{
@@ -42,6 +75,9 @@ func TestHandleOrder(t *testing.T) {
 			makeBook(
 				limSell(11, 100, 2),
 			),
+			makeTicks(
+				execTick(10, 100),
+			),
 		},
 		{
 			"completely matched limit sell at a matching price removes resting order",
@@ -53,6 +89,9 @@ func TestHandleOrder(t *testing.T) {
 			makeBook(
 				limBuy(9, 100, 2),
 			),
+			makeTicks(
+				execTick(10, 100),
+			),
 		},
 		{
 			"completely matched limit buy at a better price removes resting order",
@@ -62,6 +101,9 @@ func TestHandleOrder(t *testing.T) {
 			),
 			limBuy(11, 100, 4),
 			makeBook(),
+			makeTicks(
+				execTick(10, 100),
+			),
 		},
 		{
 			"completely matched limit sell at a better price removes resting order",
@@ -71,6 +113,9 @@ func TestHandleOrder(t *testing.T) {
 			),
 			limSell(9, 100, 4),
 			makeBook(),
+			makeTicks(
+				execTick(10, 100),
+			),
 		},
 		{
 			"completely matched market sell removes resting order",
@@ -82,6 +127,9 @@ func TestHandleOrder(t *testing.T) {
 			makeBook(
 				limBuy(9, 100, 2),
 			),
+			makeTicks(
+				execTick(10, 100),
+			),
 		},
 		{
 			"partially matched market sell removes resting order, disappears",
@@ -90,6 +138,9 @@ func TestHandleOrder(t *testing.T) {
 			),
 			mktSell(-1, 100, 4),
 			makeBook(),
+			makeTicks(
+				execTick(10, 100),
+			),
 		},
 		{
 			"completely matched market sell removes part of resting order",
@@ -102,6 +153,9 @@ func TestHandleOrder(t *testing.T) {
 				limBuy(9, 100, 2),
 				limBuy(10, 100, 1),
 			),
+			makeTicks(
+				execTick(10, 100),
+			),
 		},
 		{
 			"unfulfilled limit buy sits in the book",
@@ -112,6 +166,9 @@ func TestHandleOrder(t *testing.T) {
 			makeBook(
 				limBuy(10, 100, 1),
 				limBuy(20, 100, 4),
+			),
+			makeTicks(
+				quoteTick(20, 100),
 			),
 		},
 		{
@@ -125,13 +182,22 @@ func TestHandleOrder(t *testing.T) {
 			makeBook(
 				limBuy(15, 200, 4),
 			),
+			makeTicks(
+				execTick(10, 100),
+				execTick(11, 100),
+				execTick(11, 100),
+				quoteTick(15, 200),
+			),
 		},
 	}
+
 	for _, test := range tests {
 		t.Log(test.description)
+		ticker := recordingTicker{t: t}
 		mkt := market{"AAPL", test.before}
 		mkt.normalize()
-		mkt.handleOrder(test.order)
+		mkt.handleOrder(test.order, &ticker)
 		assertEqualBooks(t, mkt.book, test.after, test.description)
+		ticker.assertTicks(test.ticks)
 	}
 }

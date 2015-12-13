@@ -12,9 +12,6 @@ const (
 
 	// Exchanges indicate matching an order with an execution tick
 	ExecutionTick
-
-	// Exchanges indicate the withdrawal of a limit order with a cancellation tick
-	CancellationTick
 )
 
 // Exchanges report changes in their state with Ticks
@@ -44,8 +41,6 @@ func (tk *Tick) String() string {
 		ty = "Q"
 	case ExecutionTick:
 		ty = "E"
-	case CancellationTick:
-		ty = "C"
 	default:
 		ty = "???"
 	}

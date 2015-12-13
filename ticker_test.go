@@ -13,7 +13,6 @@ func TestTickString(t *testing.T) {
 		{exchanger.Tick{}, "<??? 0x@0>"},
 		{exchanger.Tick{Type: exchanger.QuoteTick, Quantity: 10, Price: 99, Symbol: "TST"}, "<Q 10xTST@99>"},
 		{exchanger.Tick{Type: exchanger.ExecutionTick, Quantity: 10, Price: 99, Symbol: "TST"}, "<E 10xTST@99>"},
-		{exchanger.Tick{Type: exchanger.CancellationTick, Quantity: 10, Price: 99, Symbol: "TST"}, "<C 10xTST@99>"},
 	}
 
 	for _, tst := range tests {
