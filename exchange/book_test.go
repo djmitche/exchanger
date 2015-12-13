@@ -51,6 +51,7 @@ func TestSorting(t *testing.T) {
 			}
 		}
 		if !ok {
+			t.Log(test.description)
 			var got []uint64
 			for _, ord := range test.book.orders {
 				got = append(got, ord.ordinal)

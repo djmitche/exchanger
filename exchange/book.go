@@ -69,6 +69,10 @@ func (bk book) String() string {
 	return strings.Join(lines, "\n")
 }
 
+func (bk *book) Add(order *stampedOrder) {
+	bk.orders = append(bk.orders, order)
+}
+
 // Given a sorted book, return true if the book is "crossed", meaning that it
 // contains a sell order at a lower price than a buy order.
 func (bk book) IsCrossed() bool {

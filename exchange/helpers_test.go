@@ -11,6 +11,7 @@ func mktBuy(price int, quantity int, ordinal uint64) *stampedOrder {
 			OrderInfo: exchanger.Buy,
 			Quantity:  quantity,
 			Price:     price,
+			Symbol:    "AAPL",
 		},
 		ordinal: ordinal,
 	}
@@ -22,6 +23,7 @@ func mktSell(price int, quantity int, ordinal uint64) *stampedOrder {
 			OrderInfo: 0,
 			Quantity:  quantity,
 			Price:     price,
+			Symbol:    "AAPL",
 		},
 		ordinal: ordinal,
 	}
@@ -33,6 +35,7 @@ func limBuy(price int, quantity int, ordinal uint64) *stampedOrder {
 			OrderInfo: exchanger.Buy | exchanger.Limit,
 			Quantity:  quantity,
 			Price:     price,
+			Symbol:    "AAPL",
 		},
 		ordinal: ordinal,
 	}
@@ -44,6 +47,7 @@ func limSell(price int, quantity int, ordinal uint64) *stampedOrder {
 			OrderInfo: exchanger.Limit,
 			Quantity:  quantity,
 			Price:     price,
+			Symbol:    "AAPL",
 		},
 		ordinal: ordinal,
 	}
