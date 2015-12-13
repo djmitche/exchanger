@@ -10,11 +10,14 @@ func TestOrderString(t *testing.T) {
 		input exchanger.Order
 		exp   string
 	}{
-		{exchanger.Order{}, "<??? 0x@0>"},
-		{exchanger.Order{Type: exchanger.MarketOrder}, "<MKT 0x@0>"},
-		{exchanger.Order{Type: exchanger.LimitOrder}, "<LIM 0x@0>"},
-		{exchanger.Order{Type: exchanger.MarketOrder, Quantity: 10, Price: 99, Symbol: "TST"}, "<MKT 10xTST@99>"},
-		{exchanger.Order{Type: exchanger.LimitOrder, Quantity: 10, Price: 99, Symbol: "TST"}, "<LIM 10xTST@99>"},
+		{exchanger.Order{},
+			"<SELL/MKT 0x@0>"},
+		{exchanger.Order{OrderInfo: exchanger.Buy},
+			"<BUY/MKT 0x@0>"},
+		{exchanger.Order{OrderInfo: exchanger.Limit, Quantity: 10, Price: 99, Symbol: "TST"},
+			"<SELL/LIM 10xTST@99>"},
+		{exchanger.Order{OrderInfo: exchanger.Buy | exchanger.Limit, Quantity: 10, Price: 99, Symbol: "TST"},
+			"<BUY/LIM 10xTST@99>"},
 	}
 
 	for _, tst := range tests {

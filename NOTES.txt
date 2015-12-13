@@ -10,3 +10,24 @@ Ideas:
 * build variable-delay order channels
 * figure out a way to create random information about a symbol and build algos
   around it
+
+
+Order book example:
+
+Id   Side    Time   Qty   Price   Qty    Time   Side  
+---+------+-------+-----+-------+-----+-------+------
+#3                        20.30   200   09:05   SELL  
+#1                        20.30   100   09:01   SELL  
+#2                        20.25   100   09:03   SELL  
+#5   BUY    09:08   200   20.20                       
+#4   BUY    09:06   100   20.15                       
+#6   BUY    09:09   200   20.15  
+
+time orders reversed for different sides, but sorted by price
+
+Market orders have no price control
+
+Limit orders limit price, but can be "marketable"
+  Can also be FOK (like market, but price stipulated) or AON (all or none)
+
+"aggressor" vs. "resting" order

@@ -35,12 +35,12 @@ func ExampleOrderTee() {
 		},
 	}
 	tee.Process(&exchanger.Order{
-		Type:     exchanger.MarketOrder,
-		Quantity: 1000,
-		Price:    22,
-		Symbol:   "TEST",
+		OrderInfo: 0,
+		Quantity:  1000,
+		Price:     22,
+		Symbol:    "TEST",
 	})
 	// Output:
-	// <MKT 1000xTEST@22>
-	// <MKT 1000xTEST@22>
+	// <SELL/MKT 1000xTEST@22>
+	// <SELL/MKT 1000xTEST@22>
 }

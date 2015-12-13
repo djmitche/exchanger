@@ -22,11 +22,11 @@ func ExampleTickLogger() {
 func ExampleOrderLogger() {
 	logger := plumbing.OrderLogger{Logger: log.New(os.Stdout, "", 0)}
 	logger.Process(&exchanger.Order{
-		Type:     exchanger.LimitOrder,
-		Quantity: 1000,
-		Price:    22,
-		Symbol:   "TEST",
+		OrderInfo: exchanger.Limit | exchanger.Buy,
+		Quantity:  1000,
+		Price:     22,
+		Symbol:    "TEST",
 	})
 	// Output:
-	// <LIM 1000xTEST@22>
+	// <BUY/LIM 1000xTEST@22>
 }

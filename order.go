@@ -5,22 +5,15 @@ import (
 )
 
 const (
-	InvalidOrder = iota
-
-	// A limit order is placed on the exchange's book and will be matched against
-	// incoming market orders.
-	LimitOrder
-
-	// A market order is matched against existing limit orders and either executed
-	// or discarded.
-	MarketOrder
+	Buy   = 1 << iota // 0 = sell
+	Limit = 1 << iota // 0 = market
 )
 
 // An Order is a message sent to an order processor (usually an exchange),
 // representing a request to change the sender's position in the market
 type Order struct {
-	// Type of the order (one of the *Order constants)
-	Type int
+	// Order characteristics (bitfield)
+	OrderInfo uint32
 
 	// The quantity of contracts concerned
 	Quantity int
@@ -30,9 +23,6 @@ type Order struct {
 
 	// The symbol for the contracts
 	Symbol string
-
-	// The party-specific ordinal for this order; used, for example, to cancel a limit order
-	Ordinal int
 }
 
 // An order processor takes incoming orders and does someting appropriate with
@@ -43,14 +33,22 @@ type OrderProcessor interface {
 }
 
 func (o *Order) String() string {
-	var ty string
-	switch o.Type {
-	case LimitOrder:
-		ty = "LIM"
-	case MarketOrder:
-		ty = "MKT"
-	default:
-		ty = "???"
+	var buySell, limitMarket string
+	if o.IsBuy() {
+		buySell = "BUY"
+	} else {
+		buySell = "SELL"
 	}
-	return fmt.Sprintf("<%s %dx%s@%d>", ty, o.Quantity, o.Symbol, o.Price)
+	if o.IsLimit() {
+		limitMarket = "LIM"
+	} else {
+		limitMarket = "MKT"
+	}
+	return fmt.Sprintf("<%s/%s %dx%s@%d>", buySell, limitMarket,
+		o.Quantity, o.Symbol, o.Price)
 }
+
+func (o *Order) IsBuy() bool    { return o.OrderInfo&Buy != 0 }
+func (o *Order) IsSell() bool   { return o.OrderInfo&Buy == 0 }
+func (o *Order) IsLimit() bool  { return o.OrderInfo&Limit != 0 }
+func (o *Order) IsMarket() bool { return o.OrderInfo&Limit == 0 }
