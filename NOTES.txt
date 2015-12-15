@@ -11,6 +11,7 @@ Ideas:
 * figure out a way to create random information about a symbol and build algos
   around it
 
+<<<<<<< HEAD
 
 Order book example:
 
@@ -31,3 +32,23 @@ Limit orders limit price, but can be "marketable"
   Can also be FOK (like market, but price stipulated) or AON (all or none)
 
 "aggressor" vs. "resting" order
+
+Build components which take incoming messages and can be given an arbitrary
+set of outgoing bindings.  All of these should be exchanged in a simple but
+extensible datatype.
+
+Build an "exchange" component which maintains an LOB, takes mesages to manage
+LO's and BO's, and sends status updates as events occur.
+
+Build other utility components:
+  wye (make copies of a mesage)
+  http (allow incoming messages via HTTP post)
+  fix-tcp (allow outgoing messages in FIX format over raw TCP)
+  fix-websocket (FIX via WS)
+  json-tcp (allow outgoing messages in JSON format over raw TCP)
+  json-websocket (JSON via WS)
+  delay (delay messages)
+
+Build a registry for components' inputs to help with discovery
+
+Build a way to create and wire up components based on a text file of some sort
