@@ -79,11 +79,11 @@ func makeTicks(ticks ...exchanger.Tick) []exchanger.Tick {
 	return ticks
 }
 
-func assertEqualBooks(t *testing.T, a book, b book, description string) {
-	aString := a.String()
-	bString := b.String()
+func assertEqualBooks(t *testing.T, got *book, exp *book, description string) {
+	gotString := got.String()
+	expString := exp.String()
 
-	if aString != bString {
-		t.Errorf("%s: books differ:\n%s\n----\n%s\n----", description, aString, bString)
+	if gotString != expString {
+		t.Errorf("%s: books differ; got:\n%s\n---- expected:\n%s\n----", description, gotString, expString)
 	}
 }

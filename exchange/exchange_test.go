@@ -11,7 +11,6 @@ type recordingTicker struct {
 }
 
 func (tkr *recordingTicker) Tick(tick *exchanger.Tick) {
-	tkr.t.Log(tick)
 	tkr.ticks = append(tkr.ticks, *tick)
 }
 
@@ -165,7 +164,7 @@ func TestHandleOrder(t *testing.T) {
 			limBuy(20, 100, 4),
 			makeBook(
 				limBuy(10, 100, 1),
-				limBuy(20, 100, 4),
+				limBuy(20, 100, 10),
 			),
 			makeTicks(
 				quoteTick(20, 100),
@@ -180,7 +179,7 @@ func TestHandleOrder(t *testing.T) {
 			),
 			limBuy(15, 500, 4),
 			makeBook(
-				limBuy(15, 200, 4),
+				limBuy(15, 200, 10),
 			),
 			makeTicks(
 				execTick(10, 100),
@@ -193,11 +192,15 @@ func TestHandleOrder(t *testing.T) {
 
 	for _, test := range tests {
 		t.Log(test.description)
+		exch := New([]string{"AAPL"})
+		exch.ordinal = 10
+		before := test.before // make a copy
+		exch.books["AAPL"] = &before
 		ticker := recordingTicker{t: t}
-		mkt := market{"AAPL", test.before}
-		mkt.normalize()
-		mkt.handleOrder(test.order, &ticker)
-		assertEqualBooks(t, mkt.book, test.after, test.description)
+		exch.ticker = &ticker
+		exch.normalize()
+		exch.Process(&test.order.Order)
+		assertEqualBooks(t, exch.books["AAPL"], &test.after, test.description)
 		ticker.assertTicks(test.ticks)
 	}
 }
