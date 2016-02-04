@@ -4,8 +4,7 @@ import (
 	"github.com/djmitche/exchanger"
 )
 
-// TODO: rename to just order
-type stampedOrder struct {
+type order struct {
 	exchanger.Order
 
 	// marker of order arrival; buy orders are negative and sell orders
@@ -14,6 +13,6 @@ type stampedOrder struct {
 	ordinal uint64
 }
 
-func (o *stampedOrder) String() string {
+func (o *order) String() string {
 	return o.Order.String()
 }

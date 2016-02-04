@@ -35,7 +35,7 @@ func TestHandleOrder(t *testing.T) {
 	tests := []struct {
 		description string
 		before      book
-		order       *stampedOrder
+		order       *order
 		after       book
 		ticks       []exchanger.Tick
 	}{

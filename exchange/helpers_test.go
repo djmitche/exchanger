@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func mktBuy(price int, quantity int, ordinal uint64) *stampedOrder {
-	return &stampedOrder{
+func mktBuy(price int, quantity int, ordinal uint64) *order {
+	return &order{
 		Order: exchanger.Order{
 			OrderInfo: exchanger.Buy,
 			Quantity:  quantity,
@@ -17,8 +17,8 @@ func mktBuy(price int, quantity int, ordinal uint64) *stampedOrder {
 	}
 }
 
-func mktSell(price int, quantity int, ordinal uint64) *stampedOrder {
-	return &stampedOrder{
+func mktSell(price int, quantity int, ordinal uint64) *order {
+	return &order{
 		Order: exchanger.Order{
 			OrderInfo: 0,
 			Quantity:  quantity,
@@ -29,8 +29,8 @@ func mktSell(price int, quantity int, ordinal uint64) *stampedOrder {
 	}
 }
 
-func limBuy(price int, quantity int, ordinal uint64) *stampedOrder {
-	return &stampedOrder{
+func limBuy(price int, quantity int, ordinal uint64) *order {
+	return &order{
 		Order: exchanger.Order{
 			OrderInfo: exchanger.Buy | exchanger.Limit,
 			Quantity:  quantity,
@@ -41,8 +41,8 @@ func limBuy(price int, quantity int, ordinal uint64) *stampedOrder {
 	}
 }
 
-func limSell(price int, quantity int, ordinal uint64) *stampedOrder {
-	return &stampedOrder{
+func limSell(price int, quantity int, ordinal uint64) *order {
+	return &order{
 		Order: exchanger.Order{
 			OrderInfo: exchanger.Limit,
 			Quantity:  quantity,
@@ -53,7 +53,7 @@ func limSell(price int, quantity int, ordinal uint64) *stampedOrder {
 	}
 }
 
-func makeBook(orders ...*stampedOrder) book {
+func makeBook(orders ...*order) book {
 	return book{orders: orders}
 }
 

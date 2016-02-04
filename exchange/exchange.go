@@ -43,7 +43,7 @@ func (e *Exchange) normalize() {
 // Match returns true and the matched price if the given aggressive and resting
 // order match.  This assumes the caller has verified the two are not both of
 // the same type (buy/buy or sell/sell) and of course the same symbol.
-func match(aggressive, resting *stampedOrder) (bool, int) {
+func match(aggressive, resting *order) (bool, int) {
 	if aggressive.IsMarket() {
 		// a market order matches any resting order regardless of price
 		return true, resting.Price
@@ -64,7 +64,7 @@ func match(aggressive, resting *stampedOrder) (bool, int) {
 
 // execute the given aggressive and resting orders against one another, assuming they
 // match.  The executed quantity is the minimum of the orders' quantities.
-func execute(aggressive, resting *stampedOrder, price int, ticker exchanger.Ticker) {
+func execute(aggressive, resting *order, price int, ticker exchanger.Ticker) {
 	quantity := aggressive.Quantity
 	if resting.Quantity < quantity {
 		quantity = resting.Quantity
@@ -104,7 +104,7 @@ func (e Exchange) String() string {
 }
 
 func (e *Exchange) Process(o *exchanger.Order) {
-	order := &stampedOrder{
+	order := &order{
 		Order:   *o,
 		ordinal: e.ordinal,
 	}

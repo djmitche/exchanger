@@ -8,7 +8,7 @@ import (
 )
 
 type book struct {
-	orders []*stampedOrder
+	orders []*order
 }
 
 func (bk book) Len() int {
@@ -69,7 +69,7 @@ func (bk book) String() string {
 	return strings.Join(lines, "\n")
 }
 
-func (bk *book) Add(order *stampedOrder) {
+func (bk *book) Add(order *order) {
 	bk.orders = append(bk.orders, order)
 }
 

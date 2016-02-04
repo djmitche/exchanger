@@ -36,7 +36,7 @@ func TestSorting(t *testing.T) {
 
 	for _, test := range tests {
 		// shuffle the input book
-		bk := make([]*stampedOrder, len(test.book.orders))
+		bk := make([]*order, len(test.book.orders))
 		for i, j := range rand.Perm(len(test.book.orders)) {
 			bk[i] = test.book.orders[j]
 		}
