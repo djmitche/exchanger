@@ -74,14 +74,26 @@ func execute(aggressive, resting *order, price int, ticker exchanger.Ticker) {
 		return
 	}
 
-	// actually execute the order by decrementing quantity
+	// send events and execute the order
 	ticker.Tick(&exchanger.Tick{
 		Type:     exchanger.ExecutionTick,
 		Price:    price,
 		Quantity: quantity,
 		Symbol:   resting.Symbol,
 	})
+
+	event := exchanger.OrderEvent{
+		EventType: exchanger.FillEvent,
+		Quantity:  quantity,
+		Price:     price,
+	}
+
+	event.IsFinal = aggressive.Quantity == quantity
+	aggressive.callback(event)
 	aggressive.Quantity -= quantity
+
+	event.IsFinal = resting.Quantity == quantity
+	resting.callback(event)
 	resting.Quantity -= quantity
 }
 
@@ -155,16 +167,23 @@ func (e *Exchange) Process(o *exchanger.Order) {
 	}
 
 	// if this isn't a market order and it isn't filled, add it to the book
-	if !order.IsMarket() && order.Quantity != 0 {
-		fmt.Printf("%#v\n", order)
-		e.ticker.Tick(&exchanger.Tick{
-			Type:     exchanger.QuoteTick,
-			Price:    order.Price,
-			Quantity: order.Quantity,
-			Symbol:   order.Symbol,
-		})
-		book.Add(order)
-		book, ok = e.books[order.Symbol]
+	if order.Quantity != 0 {
+		if order.IsMarket() {
+			order.callback(exchanger.OrderEvent{
+				EventType: exchanger.ExpireEvent,
+				IsFinal:   true,
+			})
+		} else {
+			fmt.Printf("%#v\n", order)
+			e.ticker.Tick(&exchanger.Tick{
+				Type:     exchanger.QuoteTick,
+				Price:    order.Price,
+				Quantity: order.Quantity,
+				Symbol:   order.Symbol,
+			})
+			book.Add(order)
+			book, ok = e.books[order.Symbol]
+		}
 	}
 
 	e.normalize()

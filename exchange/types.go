@@ -13,6 +13,12 @@ type order struct {
 	ordinal uint64
 }
 
+func (o *order) callback(oe exchanger.OrderEvent) {
+	if o.Callback != nil {
+		o.Callback(oe)
+	}
+}
+
 func (o *order) String() string {
 	return o.Order.String()
 }

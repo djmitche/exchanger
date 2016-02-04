@@ -5,6 +5,33 @@ import (
 )
 
 const (
+	// A fill event means that the order was (maybe partially) filled
+	// at the given price and quantity.
+	FillEvent = iota
+
+	// An expire event indicates that the order has expired and been
+	// removed from the books.  Price and quantity are zero, and the
+	// event is always final.
+	ExpireEvent = iota
+)
+
+// An OrderEvent is an event relating to a specific order after it has been
+// submitted to a processor.
+type OrderEvent struct {
+	// One of the *Event constants
+	EventType int
+
+	// The quantity involved in the transaction
+	Quantity int
+
+	// The price of the transaction
+	Price int
+
+	// True if this is the last event for this order
+	IsFinal bool
+}
+
+const (
 	Buy   = 1 << iota // 0 = sell
 	Limit = 1 << iota // 0 = market
 )
@@ -23,13 +50,9 @@ type Order struct {
 
 	// The symbol for the contracts
 	Symbol string
-}
 
-// An order processor takes incoming orders and does someting appropriate with
-// them.  The method must handle all erorrs internally.
-type OrderProcessor interface {
-	// TODO: result "channel"?
-	Process(*Order)
+	// Callback for events for this order
+	Callback func(OrderEvent)
 }
 
 func (o *Order) String() string {
@@ -52,3 +75,9 @@ func (o *Order) IsBuy() bool    { return o.OrderInfo&Buy != 0 }
 func (o *Order) IsSell() bool   { return o.OrderInfo&Buy == 0 }
 func (o *Order) IsLimit() bool  { return o.OrderInfo&Limit != 0 }
 func (o *Order) IsMarket() bool { return o.OrderInfo&Limit == 0 }
+
+// An order processor takes incoming orders and does someting appropriate with
+// them.  The method must handle all erorrs internally.
+type OrderProcessor interface {
+	Process(*Order)
+}

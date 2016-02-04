@@ -38,9 +38,10 @@ func TestHandleOrder(t *testing.T) {
 		order       *order
 		after       book
 		ticks       []exchanger.Tick
+		events      []event
 	}{
 		{
-			"unfulfilled market buy makes no change",
+			"unfulfilled market buy makes no change, expires",
 			makeBook(
 				limBuy(10, 100, 1),
 			),
@@ -49,6 +50,9 @@ func TestHandleOrder(t *testing.T) {
 				limBuy(10, 100, 1),
 			),
 			makeTicks(),
+			makeEvents(
+				makeEvent(4, exchanger.ExpireEvent, 0, 0, true),
+			),
 		},
 		{
 			"completely matched market buy removes resting order",
@@ -62,6 +66,10 @@ func TestHandleOrder(t *testing.T) {
 			),
 			makeTicks(
 				execTick(10, 100),
+			),
+			makeEvents(
+				makeEvent(4, exchanger.FillEvent, 100, 10, true),
+				makeEvent(1, exchanger.FillEvent, 100, 10, true),
 			),
 		},
 		{
@@ -77,6 +85,10 @@ func TestHandleOrder(t *testing.T) {
 			makeTicks(
 				execTick(10, 100),
 			),
+			makeEvents(
+				makeEvent(4, exchanger.FillEvent, 100, 10, true),
+				makeEvent(1, exchanger.FillEvent, 100, 10, true),
+			),
 		},
 		{
 			"completely matched limit sell at a matching price removes resting order",
@@ -91,6 +103,10 @@ func TestHandleOrder(t *testing.T) {
 			makeTicks(
 				execTick(10, 100),
 			),
+			makeEvents(
+				makeEvent(4, exchanger.FillEvent, 100, 10, true),
+				makeEvent(1, exchanger.FillEvent, 100, 10, true),
+			),
 		},
 		{
 			"completely matched limit buy at a better price removes resting order",
@@ -103,6 +119,10 @@ func TestHandleOrder(t *testing.T) {
 			makeTicks(
 				execTick(10, 100),
 			),
+			makeEvents(
+				makeEvent(4, exchanger.FillEvent, 100, 10, true),
+				makeEvent(1, exchanger.FillEvent, 100, 10, true),
+			),
 		},
 		{
 			"completely matched limit sell at a better price removes resting order",
@@ -114,6 +134,10 @@ func TestHandleOrder(t *testing.T) {
 			makeBook(),
 			makeTicks(
 				execTick(10, 100),
+			),
+			makeEvents(
+				makeEvent(4, exchanger.FillEvent, 100, 10, true),
+				makeEvent(1, exchanger.FillEvent, 100, 10, true),
 			),
 		},
 		{
@@ -129,6 +153,10 @@ func TestHandleOrder(t *testing.T) {
 			makeTicks(
 				execTick(10, 100),
 			),
+			makeEvents(
+				makeEvent(4, exchanger.FillEvent, 100, 10, true),
+				makeEvent(1, exchanger.FillEvent, 100, 10, true),
+			),
 		},
 		{
 			"partially matched market sell removes resting order, disappears",
@@ -139,6 +167,10 @@ func TestHandleOrder(t *testing.T) {
 			makeBook(),
 			makeTicks(
 				execTick(10, 100),
+			),
+			makeEvents(
+				makeEvent(4, exchanger.FillEvent, 100, 10, true),
+				makeEvent(2, exchanger.FillEvent, 100, 10, true),
 			),
 		},
 		{
@@ -155,6 +187,10 @@ func TestHandleOrder(t *testing.T) {
 			makeTicks(
 				execTick(10, 100),
 			),
+			makeEvents(
+				makeEvent(4, exchanger.FillEvent, 100, 10, true),
+				makeEvent(1, exchanger.FillEvent, 100, 10, false),
+			),
 		},
 		{
 			"unfulfilled limit buy sits in the book",
@@ -169,13 +205,14 @@ func TestHandleOrder(t *testing.T) {
 			makeTicks(
 				quoteTick(20, 100),
 			),
+			makeEvents(),
 		},
 		{
 			"big limit buy walks the book then sits in it",
 			makeBook(
 				limSell(10, 100, 1),
-				limSell(11, 100, 1),
-				limSell(11, 100, 1),
+				limSell(11, 100, 2),
+				limSell(11, 100, 3),
 			),
 			limBuy(15, 500, 4),
 			makeBook(
@@ -187,20 +224,57 @@ func TestHandleOrder(t *testing.T) {
 				execTick(11, 100),
 				quoteTick(15, 200),
 			),
+			makeEvents(
+				makeEvent(4, exchanger.FillEvent, 100, 10, false),
+				makeEvent(1, exchanger.FillEvent, 100, 10, true),
+				makeEvent(4, exchanger.FillEvent, 100, 11, false),
+				makeEvent(2, exchanger.FillEvent, 100, 11, true),
+				makeEvent(4, exchanger.FillEvent, 100, 11, false),
+				makeEvent(3, exchanger.FillEvent, 100, 11, true),
+			),
 		},
 	}
 
 	for _, test := range tests {
+		var gotEvents []event
+
 		t.Log(test.description)
+
+		// set up a new exchange with the "before" book
 		exch := New([]string{"AAPL"})
 		exch.ordinal = 10
 		before := test.before // make a copy
 		exch.books["AAPL"] = &before
+
+		// attach event callbacks to all resting orders
+		for i := range before.orders {
+			var order = before.orders[i]
+			order.Callback = func(oe exchanger.OrderEvent) {
+				gotEvents = append(gotEvents, event{
+					ordinal:    order.ordinal,
+					OrderEvent: oe,
+				})
+			}
+		}
+
+		test.order.Callback = func(oe exchanger.OrderEvent) {
+			gotEvents = append(gotEvents, event{
+				ordinal:    test.order.ordinal,
+				OrderEvent: oe,
+			})
+		}
+
+		// set up a ticker
 		ticker := recordingTicker{t: t}
 		exch.ticker = &ticker
+
+		// normalize the book and process the order
 		exch.normalize()
 		exch.Process(&test.order.Order)
+
+		// verify results
 		assertEqualBooks(t, exch.books["AAPL"], &test.after, test.description)
 		ticker.assertTicks(test.ticks)
+		assertEqualEvents(t, gotEvents, test.events)
 	}
 }
